@@ -1,0 +1,33 @@
+{
+  "configurations": [
+    {
+      "type": "command",
+      "name": "Clean",
+      "program": "cmake",
+      "args": ["--build", "build", "--target", "clean"],
+    },
+    {
+      "type": "command",
+      "name": "Build",
+      "program": "cmake",
+      "args": ["--build", "build", "-j 24"],
+    },
+    {
+      "type": "command",
+      "name": "Build Debug",
+      "program": "cmake",
+      "args": ["--build", "build", "-j 24"],
+    },
+    {
+      "type": "command",
+      "name": "Build Release",
+      "program": "cmake",
+      "args": ["--build", "build", "-j 24"],
+    },
+    {
+      "type": "command",
+      "name": "Run",
+      "program": "./build/HelloWorld"
+    }
+  ]
+}
