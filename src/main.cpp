@@ -25,14 +25,16 @@ constexpr auto operator""_b(const char* data, size_t length) noexcept {
   return std::transform_reduce(view.begin(), view.end(), 0ull, std::bit_or{}, [](auto&& ch) {
     return operator""_f(&ch[0], 1) & operator""_r(&ch[1], 1);
   });
+}
 
-//  auto r = 0ull;
-//  for (size_t i = 0; i < length; i += 2)
-//    r |= operator"" _r(data + i + 1, 1) & operator"" _f(data + i, 1);
-//  return r;
+constexpr auto operator""_s(const char* data, size_t length) noexcept {
+  const auto view = std::string_view{data, length} | std::views::take(2);
+  return std::countr_zero(operator""_b(view.data(), view.size()));
 }
 
 static_assert("a1b3"_b == 131073, "check op_b");
+static_assert("a1"_s == 0, "square a1");
+static_assert("h8"_s == 63, "square h8");
 
 int main() {
   std::cout << "Hello world" << std::endl;
