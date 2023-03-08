@@ -23,7 +23,7 @@ constexpr auto operator""_r(const char* data, size_t length) noexcept {
 constexpr auto operator""_b(const char* data, size_t length) noexcept {
   const auto view = std::string_view{data, length} | std::views::chunk(2);
   return std::transform_reduce(view.begin(), view.end(), 0ull, std::bit_or{}, [](auto&& ch) {
-    return operator"" _f(&ch[0], 1) & operator"" _r(&ch[1], 1);
+    return operator""_f(&ch[0], 1) & operator""_r(&ch[1], 1);
   });
 
 //  auto r = 0ull;
@@ -32,7 +32,7 @@ constexpr auto operator""_b(const char* data, size_t length) noexcept {
 //  return r;
 }
 
-static_assert("a1b3"_b == 131073, "check op_r");
+static_assert("a1b3"_b == 131073, "check op_b");
 
 int main() {
   std::cout << "Hello world" << std::endl;
