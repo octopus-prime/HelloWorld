@@ -1,3 +1,4 @@
+#include <functional>
 #include <numeric>
 #include <iostream>
 
