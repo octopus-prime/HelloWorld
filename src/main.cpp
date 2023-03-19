@@ -41,7 +41,7 @@ int main() {
   std::atomic_uint64_t count = 0;
   auto time0 = std::chrono::high_resolution_clock::now();
 
-  constexpr auto depth = 6;
+  constexpr auto depth = 7;
   /*
   std::vector<std::jthread> todo;
   for (int i = 0; i < 24; ++i) {
