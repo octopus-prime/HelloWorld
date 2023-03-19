@@ -13,7 +13,7 @@ struct sliders_lookup {
 
   std::array<block, 64> blocks;
 
-  constexpr uint64_t operator[](auto square, uint64_t occupied) const noexcept {
+  constexpr uint64_t operator()(auto square, uint64_t occupied) const noexcept {
     const auto& block = blocks[square];
     const auto index = _pext_u64(occupied, block.mask);
     return block.data[index];

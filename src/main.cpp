@@ -42,7 +42,7 @@ int main() {
   auto time0 = std::chrono::high_resolution_clock::now();
 
   constexpr auto depth = 6;
-
+  /*
   std::vector<std::jthread> todo;
   for (int i = 0; i < 24; ++i) {
     todo.emplace_back([&position,&count](){
@@ -51,8 +51,8 @@ int main() {
   }
   for (auto &&y : todo)
     y.join();
-
-//  count = position.perft(depth);
+*/
+  count = position.perft(depth);
   auto time1 = std::chrono::high_resolution_clock::now();
   const auto time =
       std::chrono::duration_cast<std::chrono::duration<float, std::ratio<1>>>(

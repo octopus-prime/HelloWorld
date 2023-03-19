@@ -64,7 +64,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     constexpr move::tag_t rook_or_queen[] = {move::rook{}, move::queen{}};
     for (char from : square_view(node.rook_queen & self)) {
       auto tag = rook_or_queen[bool((1ull << from) & node.bishop_queen)];
-      uint64_t out = lookup_rook_queen[from, node.white | node.black];
+      uint64_t out = lookup_rook_queen(from, node.white | node.black);
       for (char to : square_view(out & ~self))
         moves[index++] = {tag, from, to};
     }
@@ -75,7 +75,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char from : square_view(node.bishop_queen & self)) {
       auto tag = bishop_or_queen[bool((1ull << from) & node.rook_queen)];
 //      bool queen = (1ull << from) & node.rook_queen;
-      uint64_t out = lookup_bishop_queen[from, node.white | node.black];
+      uint64_t out = lookup_bishop_queen(from, node.white | node.black);
       for (char to : square_view(out & ~self))
         moves[index++] = {tag, from, to};
     }

@@ -16,7 +16,7 @@ size_t search(const node& node, int depth) {
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
-//    if (!succ.check<side>())
+    if (!succ.check<side>())
       count += search<flip<side>>(succ, depth - 1);
   }
   return count;

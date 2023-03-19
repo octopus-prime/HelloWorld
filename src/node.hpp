@@ -52,8 +52,8 @@ template <typename side>
 inline uint64_t node::attacked(int square, uint64_t color) const noexcept {
   auto out = lookup_kings[square] & (king & color);
   out |= lookup_knights[square] & (knight & color);
-  out |= lookup_rook_queen[square, white | black] & (rook_queen & color);
-  out |= lookup_bishop_queen[square, white | black] & (bishop_queen & color);
+  out |= lookup_rook_queen(square, white | black) & (rook_queen & color);
+  out |= lookup_bishop_queen(square, white | black) & (bishop_queen & color);
   if constexpr (std::is_same_v<side, white_side>)
     out |= lookup_pawns_w[square] & (pawn & color);
   else
