@@ -1,46 +1,7 @@
 #include "generator.hpp"
+#include "lookup.hpp"
 #include "literal.hpp"
 #include <ranges>
-
-constexpr uint64_t expand_kings(uint64_t in) noexcept {
-  constexpr int shifts[] = {1, 8, 7, 9};
-  constexpr uint64_t masks_left[] = {~"a"_f, ~""_f, ~"h"_f, ~"a"_f};
-  constexpr uint64_t masks_right[] = {~"h"_f, ~""_f, ~"a"_f, ~"h"_f};
-  const auto view = std::views::zip(shifts, masks_left, masks_right);
-  return std::transform_reduce(view.begin(), view.end(), 0ull, std::bit_or{}, [in](auto&& tuple) noexcept {
-    const uint64_t left = (in << std::get<0>(tuple)) & std::get<1>(tuple);
-    const uint64_t right = (in >> std::get<0>(tuple)) & std::get<2>(tuple);
-    return left | right;
-  });
-}
-
-static constexpr std::array<uint64_t, 64> lookup_kings = []() noexcept {
-  const auto view = std::views::iota(0) | std::views::transform([](auto index){
-    return expand_kings(1ull << index);
-  });
-  std::array<uint64_t, 64> data;
-  std::copy_n(view.begin(), 64, data.begin());
-  return data;
-}();
-
-constexpr uint64_t expand_knights(uint64_t in) noexcept {
-  constexpr int shifts[] = {10, 17, 15, 6};
-  constexpr uint64_t masks_left[] = {~"ab"_f, ~"a"_f, ~"h"_f, ~"gh"_f};
-  constexpr uint64_t masks_right[] = {~"gh"_f, ~"h"_f, ~"a"_f, ~"ab"_f};
-  const auto view = std::views::zip(shifts, masks_left, masks_right);
-  return std::transform_reduce(view.begin(), view.end(), 0ull, std::bit_or{}, [in](auto&& tuple) noexcept {
-    const uint64_t left = (in << std::get<0>(tuple)) & std::get<1>(tuple);
-    const uint64_t right = (in >> std::get<0>(tuple)) & std::get<2>(tuple);
-    return left | right;
-  });
-}
-
-static constexpr std::array<uint64_t, 64> lookup_knights = []() noexcept {
-  std::array<uint64_t, 64> v;
-  for (int i = 0; i < 64; ++i)
-    v[i] = expand_knights(1ull << i);
-  return v;
-}();
 
 class square_view
 {
@@ -80,90 +41,143 @@ private:
   uint64_t _board;
 };
 
-//struct king_generator {
-//  template<typename side>
-//  int generate(const node& node, std::span<move> moves) const noexcept;
-//};
-//
-//struct king_castle_short_generator {
-//  template<typename side>
-//  int generate(const node& node, std::span<move> moves) const noexcept;
-//};
-//
-//template<> int king_castle_short_generator::generate<white_side>(const node &node, std::span<move> moves) const noexcept {
-//  //  if ((node.castle & "g1"_b) && !(node.occupied() & "f1g1"_b) &&
-//  //      !attacked<side>(e1) && !attacked<side>(e1 + 1) &&
-//  //      !attacked<side>(e1 + 2))
-//  //    *end++ = move_t{'k', (char)e1, (char)e1 + 2};
-//
-//  int index = 0;
-//  moves[index++] = {"e1"_s, "g1"_s, king_castle_short_executer<white_side>{}};
-//
-//  return index;
-//}
-//
-//template<> int king_castle_short_generator::generate<black_side>(const node &node, std::span<move> moves) const noexcept {
-//  //  if ((node.castle & "g1"_b) && !(node.occupied() & "f1g1"_b) &&
-//  //      !attacked<side>(e1) && !attacked<side>(e1 + 1) &&
-//  //      !attacked<side>(e1 + 2))
-//  //    *end++ = move_t{'k', (char)e1, (char)e1 + 2};
-//
-//  int index = 0;
-//  moves[index++] = {"e8"_s, "g8"_s, king_castle_short_executer<black_side>{}};
-//
-//  return index;
-//}
-//
-//struct king_castle_long_generator {
-//  template<typename side>
-//  int generate(const node& node, std::span<move> moves) const noexcept;
-//};
-
 template<typename side>
 std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept {
   int index = 0;
-//  index += king_generator{}.generate<side>(node, moves.subspan(index));
-//  index += king_castle_short_generator{}.generate<side>(node, moves.subspan(index));
-//  index += king_castle_long_generator{}.generate<side>(node, moves.subspan(index));
-
-//  moves[index++] = {move::king{}, 13, 17};
-//  moves[index++] = {move::castle_short{}};
-//  moves[index++] = {move::castle_long{}};
-//  moves[index++] = {move::queen{}, 13, 17};
-//  moves[index++] = {move::rook{}, 13, 17};
-//  moves[index++] = {move::bishop{}, 13, 17};
-//  moves[index++] = {move::knight{}, 13, 17};
-//  moves[index++] = {move::pawn{}, 13, 17};
-//  moves[index++] = {move::promote_queen{}, 13, 17};
-//  moves[index++] = {move::promote_rook{}, 13, 17};
-//  moves[index++] = {move::promote_bishop{}, 13, 17};
-//  moves[index++] = {move::promote_knight{}, 13, 17};
-//  moves[index++] = {move::en_passant{}, 13, 17};
 
   const auto generate_kings = [&](uint64_t self) noexcept {
-    auto from = std::countr_zero(node.king & self);
+    char from = std::countr_zero(node.king & self);
     uint64_t out = lookup_kings[from];
-    for (auto to : square_view(out & ~self))
-      moves[index++] = {move::king{}, (char)from, (char)to};
+    for (char to : square_view(out & ~self))
+      moves[index++] = {move::king{}, from, to};
   };
 
   const auto generate_knights = [&](uint64_t self) noexcept {
-    for (auto from : square_view(node.knight & self)) {
+    for (char from : square_view(node.knight & self)) {
       uint64_t out = lookup_knights[from];
-      for (auto to : square_view(out & ~self))
-        moves[index++] = {move::knight{}, (char)from, (char)to};
+      for (char to : square_view(out & ~self))
+        moves[index++] = {move::knight{}, from, to};
     }
+  };
+
+  const auto generate_rooks_queens = [&](uint64_t self) noexcept {
+    constexpr move::tag_t rook_or_queen[] = {move::rook{}, move::queen{}};
+    for (char from : square_view(node.rook_queen & self)) {
+      auto tag = rook_or_queen[bool((1ull << from) & node.bishop_queen)];
+      uint64_t out = lookup_rook_queen[from, node.white | node.black];
+      for (char to : square_view(out & ~self))
+        moves[index++] = {tag, from, to};
+    }
+  };
+
+  const auto generate_bishops_queens = [&](uint64_t self) noexcept {
+    constexpr move::tag_t bishop_or_queen[] = {move::bishop{}, move::queen{}};
+    for (char from : square_view(node.bishop_queen & self)) {
+      auto tag = bishop_or_queen[bool((1ull << from) & node.rook_queen)];
+//      bool queen = (1ull << from) & node.rook_queen;
+      uint64_t out = lookup_bishop_queen[from, node.white | node.black];
+      for (char to : square_view(out & ~self))
+        moves[index++] = {tag, from, to};
+    }
+  };
+
+  const auto generate_single_promote_w = [&](char from, char to) noexcept {
+    if (to < "a8"_s) {
+      moves[index++] = {move::pawn_single{}, from, to};
+    } else {
+      moves[index++] = {move::pawn_single_promote_queen{}, from, to};
+      moves[index++] = {move::pawn_single_promote_rook{}, from, to};
+      moves[index++] = {move::pawn_single_promote_bishop{}, from, to};
+      moves[index++] = {move::pawn_single_promote_knight{}, from, to};
+    }
+  };
+
+  const auto generate_single_promote_b = [&](char from, char to) noexcept {
+    if (to > "h1"_s) {
+      moves[index++] = {move::pawn_single{}, from, to};
+    } else {
+      moves[index++] = {move::pawn_single_promote_queen{}, from, to};
+      moves[index++] = {move::pawn_single_promote_rook{}, from, to};
+      moves[index++] = {move::pawn_single_promote_bishop{}, from, to};
+      moves[index++] = {move::pawn_single_promote_knight{}, from, to};
+    }
+  };
+
+  const auto generate_capture_promote_w = [&](char from, char to) noexcept {
+    if (to < "a8"_s) {
+      moves[index++] = {move::pawn_capture{}, from, to};
+    } else {
+      moves[index++] = {move::pawn_capture_promote_queen{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_rook{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_bishop{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_knight{}, from, to};
+    }
+  };
+
+  const auto generate_capture_promote_b = [&](char from, char to) noexcept {
+    if (to > "h1"_s) {
+      moves[index++] = {move::pawn_capture{}, from, to};
+    } else {
+      moves[index++] = {move::pawn_capture_promote_queen{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_rook{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_bishop{}, from, to};
+      moves[index++] = {move::pawn_capture_promote_knight{}, from, to};
+    }
+  };
+
+  const auto generate_pawns_w = [&]() noexcept {
+    const auto pawn = node.pawn & node.white;
+
+    const auto front = (pawn << 8) & ~(node.white | node.black);
+    for (char to : square_view(front))
+      generate_single_promote_w(to - 8, to);
+
+    const auto front2 = ((front >> 8) & "2"_r) << 16;
+    for (char to : square_view(front2 & ~(node.white | node.black)))
+      moves[index++] = {move::pawn_double{}, char(to - 16), (char)to};
+
+    const auto left = (pawn << 7) & ~"h"_f;
+    for (char to : square_view(left & node.black))
+      generate_capture_promote_w(to - 7, to);
+
+    const auto right = (pawn << 9) & ~"a"_f;
+    for (char to : square_view(right & node.black))
+      generate_capture_promote_w(to - 9, to);
+  };
+
+  const auto generate_pawns_b = [&]() noexcept {
+    const auto pawn = node.pawn & node.black;
+
+    const auto front = (pawn >> 8) & ~(node.white | node.black);
+    for (char to : square_view(front))
+      generate_single_promote_b(to + 8, to);
+
+    const auto front2 = ((front << 8) & "7"_r) >> 16;
+    for (char to : square_view(front2 & ~(node.white | node.black)))
+      moves[index++] = {move::pawn_double{}, char(to + 16), (char)to};
+
+    const auto left = (pawn >> 9) & ~"h"_f;
+    for (char to : square_view(left & node.white))
+      generate_capture_promote_b(to + 9, to);
+
+    const auto right = (pawn >> 7) & ~"a"_f;
+    for (char to : square_view(right & node.white))
+      generate_capture_promote_b(to + 7, to);
   };
 
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);
     generate_knights(node.white);
+    generate_rooks_queens(node.white);
+    generate_bishops_queens(node.white);
+    generate_pawns_w();
   } else {
     generate_kings(node.black);
     generate_knights(node.black);
+    generate_rooks_queens(node.black);
+    generate_bishops_queens(node.black);
+    generate_pawns_b();
   }
-
-  constexpr auto foo = lookup_kings[13];
 
   return moves.subspan(0, index);
 }

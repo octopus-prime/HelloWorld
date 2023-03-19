@@ -1,6 +1,7 @@
 #pragma once
 
 #include "side.hpp"
+#include "lookup.hpp"
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -27,4 +28,50 @@ struct node {
 
   template <typename side>
   std::span<move> generate(std::span<move, 256> moves) const noexcept;
+
+  template <typename side>
+  uint64_t attacked(int sqaure, uint64_t color) const noexcept;
+
+  template <typename side>
+  bool check() const noexcept;
 };
+
+
+//template <typename side>
+//uint64_t node::attacked(auto square) const noexcept {
+//  using other = flip<side>;
+//  auto out = lookup_kings[square] & kings<other>();
+//  out |= lookup_knights[square] & knights<other>();
+//  out |= lookup_rook_queen[square, white | black] & rooks_queens2<other>();
+//  out |= lookup_bishop_queen[square, white | black] & bishops_queens2<other>();
+//  out |= lookup_pawns<side>(square) & pawns2<other>();
+//  return out;
+//}
+
+template <typename side>
+inline uint64_t node::attacked(int square, uint64_t color) const noexcept {
+  auto out = lookup_kings[square] & (king & color);
+  out |= lookup_knights[square] & (knight & color);
+  out |= lookup_rook_queen[square, white | black] & (rook_queen & color);
+  out |= lookup_bishop_queen[square, white | black] & (bishop_queen & color);
+  if constexpr (std::is_same_v<side, white_side>)
+    out |= lookup_pawns_w[square] & (pawn & color);
+  else
+    out |= lookup_pawns_b[square] & (pawn & color);
+  return out;
+}
+
+template <>
+inline bool node::check<white_side>() const noexcept {
+  auto square = std::countr_zero(king & white);
+  return attacked<white_side>(square, black);
+}
+
+template <>
+inline bool node::check<black_side>() const noexcept {
+  auto square = std::countr_zero(king & black);
+  return attacked<black_side>(square, white);
+}
+
+//template bool node::check<white_side>() const noexcept;
+//template bool node::check<black_side>() const noexcept;

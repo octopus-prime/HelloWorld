@@ -15,11 +15,11 @@ void print(std::ostream& stream, int from, int to, move::king) {
   stream << 'K' << square(from).view << square(to).view;
 }
 
-void print(std::ostream& stream, int from, int to, move::castle_short) {
+void print(std::ostream& stream, int from, int to, move::king_castle_short) {
   stream << "O-O";
 }
 
-void print(std::ostream& stream, int from, int to, move::castle_long) {
+void print(std::ostream& stream, int from, int to, move::king_castle_long) {
   stream << "O-O-O";
 }
 
@@ -43,27 +43,51 @@ void print(std::ostream& stream, int from, int to, move::knight_capture) {
   stream << 'N' << square(from).view << square(to).view;
 }
 
-void print(std::ostream& stream, int from, int to, move::pawn) {
+void print(std::ostream& stream, int from, int to, move::pawn_single) {
   stream << 'P' << square(from).view << square(to).view;
 }
 
-void print(std::ostream& stream, int from, int to, move::promote_queen) {
+void print(std::ostream& stream, int from, int to, move::pawn_double) {
+  stream << 'P' << square(from).view << square(to).view;
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_capture) {
+  stream << 'P' << square(from).view << square(to).view;
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_single_promote_queen) {
   stream << 'P' << square(from).view << square(to).view << 'Q';
 }
 
-void print(std::ostream& stream, int from, int to, move::promote_rook) {
+void print(std::ostream& stream, int from, int to, move::pawn_capture_promote_queen) {
+  stream << 'P' << square(from).view << square(to).view << 'Q';
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_single_promote_rook) {
   stream << 'P' << square(from).view << square(to).view << 'R';
 }
 
-void print(std::ostream& stream, int from, int to, move::promote_bishop) {
+void print(std::ostream& stream, int from, int to, move::pawn_capture_promote_rook) {
+  stream << 'P' << square(from).view << square(to).view << 'R';
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_single_promote_bishop) {
   stream << 'P' << square(from).view << square(to).view << 'B';
 }
 
-void print(std::ostream& stream, int from, int to, move::promote_knight) {
+void print(std::ostream& stream, int from, int to, move::pawn_capture_promote_bishop) {
+  stream << 'P' << square(from).view << square(to).view << 'B';
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_single_promote_knight) {
   stream << 'P' << square(from).view << square(to).view << 'N';
 }
 
-void print(std::ostream& stream, int from, int to, move::en_passant) {
+void print(std::ostream& stream, int from, int to, move::pawn_capture_promote_knight) {
+  stream << 'P' << square(from).view << square(to).view << 'N';
+}
+
+void print(std::ostream& stream, int from, int to, move::pawn_capture_en_passant) {
   stream << 'P' << square(from).view << square(to).view << "ep";
 }
 

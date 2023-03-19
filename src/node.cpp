@@ -1,16 +1,19 @@
 #include "node.hpp"
 #include "executer.hpp"
 #include "generator.hpp"
+#include "lookup.hpp"
 #include "literal.hpp"
+#include "side.hpp"
+#include <cstdint>
 
 node::node() noexcept
-    : white("1"_r),
-      black("8"_r),
+    : white("12"_r),
+      black("78"_r),
       king("e1e8"_b),
       rook_queen("a1d1h1a8d8h8"_b),
       bishop_queen("c1d1f1c8d8f8"_b),
       knight("b1g1b8g8"_b),
-      pawn(""_r),
+      pawn("27"_r),
       castle("a1h1a8h8"_b),
       en_passant() {}
 
