@@ -20,7 +20,8 @@ struct node {
   uint64_t castle;
   uint64_t en_passant;
 
-  node() noexcept;
+  node() noexcept = default;
+  node(uint64_t white, uint64_t black, uint64_t king, uint64_t rook_queen, uint64_t bishop_queen, uint64_t knight, uint64_t pawn, uint64_t castle, uint64_t en_passant) noexcept;
   node(const std::string_view fen);
 
   template <typename side>

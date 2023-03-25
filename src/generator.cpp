@@ -1,6 +1,7 @@
 #include "generator.hpp"
 #include "lookup.hpp"
 #include "literal.hpp"
+#include "side.hpp"
 #include <ranges>
 
 class square_view
@@ -50,6 +51,32 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     uint64_t out = lookup_kings[from];
     for (char to : square_view(out & ~self))
       moves[index++] = {move::king{}, from, to};
+  };
+
+  const auto generate_castle_w = [&]() noexcept {
+    auto occupied = node.white | node.black;
+      constexpr int e1 = "e1"_s;
+      if ((node.castle & "g1"_b) && !(occupied & "f1g1"_b) &&
+          !node.attacked<white_side>(e1, node.black) && !node.attacked<white_side>(e1 + 1, node.black) &&
+          !node.attacked<white_side>(e1 + 2, node.black))
+        moves[index++] = {move::king_castle_short{}, e1, e1 + 2};
+      if ((node.castle & "c1"_b) && !(occupied & "b1c1d1"_b) &&
+          !node.attacked<white_side>(e1, node.black) && !node.attacked<white_side>(e1 - 1, node.black) &&
+          !node.attacked<white_side>(e1 - 2, node.black))
+        moves[index++] = {move::king_castle_long{}, e1, e1 - 2};
+  };
+
+  const auto generate_castle_b = [&]() noexcept {
+    auto occupied = node.white | node.black;
+    constexpr int e8 = "e8"_s;
+    if ((node.castle & "g8"_b) && !(occupied & "f8g8"_b) &&
+        !node.attacked<black_side>(e8, node.white) && !node.attacked<black_side>(e8 + 1, node.white) &&
+        !node.attacked<black_side>(e8 + 2, node.white))
+      moves[index++] = {move::king_castle_short{}, e8, e8 + 2};
+    if ((node.castle & "c8"_b) && !(occupied & "b8c8d8"_b) &&
+        !node.attacked<black_side>(e8, node.white) && !node.attacked<black_side>(e8 - 1, node.white) &&
+        !node.attacked<black_side>(e8 - 2, node.white))
+      moves[index++] = {move::king_castle_long{}, e8, e8 - 2};
   };
 
   const auto generate_knights = [&](uint64_t self) noexcept {
@@ -134,7 +161,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
 
     const auto front2 = ((front >> 8) & "2"_r) << 16;
     for (char to : square_view(front2 & ~(node.white | node.black)))
-      moves[index++] = {move::pawn_double{}, char(to - 16), (char)to};
+      moves[index++] = {move::pawn_double{}, char(to - 16), to};
 
     const auto left = (pawn << 7) & ~"h"_f;
     for (char to : square_view(left & node.black))
@@ -143,6 +170,10 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     const auto right = (pawn << 9) & ~"a"_f;
     for (char to : square_view(right & node.black))
       generate_capture_promote_w(to - 9, to);
+
+    const auto en_passant = (((node.en_passant >> 7) & ~"a"_f) | ((node.en_passant >> 9) & ~"h"_f)) & node.pawn & node.white;
+    for (char from : square_view(en_passant))
+      moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
 
   const auto generate_pawns_b = [&]() noexcept {
@@ -154,7 +185,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
 
     const auto front2 = ((front << 8) & "7"_r) >> 16;
     for (char to : square_view(front2 & ~(node.white | node.black)))
-      moves[index++] = {move::pawn_double{}, char(to + 16), (char)to};
+      moves[index++] = {move::pawn_double{}, char(to + 16), to};
 
     const auto left = (pawn >> 9) & ~"h"_f;
     for (char to : square_view(left & node.white))
@@ -163,16 +194,22 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     const auto right = (pawn >> 7) & ~"a"_f;
     for (char to : square_view(right & node.white))
       generate_capture_promote_b(to + 7, to);
+
+    const auto en_passant = (((node.en_passant << 7) & ~"h"_f) | ((node.en_passant << 9) & ~"a"_f)) & node.pawn & node.black;
+    for (char from : square_view(en_passant))
+      moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
 
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);
+    generate_castle_w();
     generate_knights(node.white);
     generate_rooks_queens(node.white);
     generate_bishops_queens(node.white);
     generate_pawns_w();
   } else {
     generate_kings(node.black);
+    generate_castle_b();
     generate_knights(node.black);
     generate_rooks_queens(node.black);
     generate_bishops_queens(node.black);

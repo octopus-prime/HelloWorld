@@ -1,26 +1,23 @@
 #include "executer.hpp"
 #include "literal.hpp"
 
+void remove(node& node, uint64_t to) noexcept {
+  node.rook_queen &= ~to;
+  node.bishop_queen &= ~to;
+  node.knight &= ~to;
+  node.pawn &= ~to;
+}
+
 void remove(node& node, uint64_t to, white_side) noexcept {
-//  if (node.black & to) {
-    node.rook_queen &= ~to;
-    node.bishop_queen &= ~to;
-    node.knight &= ~to;
-    node.pawn &= ~to;
-    node.white &= ~to;
-    node.castle &= ~("a8h8"_b & to);
-//  }
+  remove(node, to);
+  node.black &= ~to;
+  node.castle &= ~("a8h8"_b & to);
 }
 
 void remove(node& node, uint64_t to, black_side) noexcept {
-//  if (node.white & to) {
-    node.rook_queen &= ~to;
-    node.bishop_queen &= ~to;
-    node.knight &= ~to;
-    node.pawn &= ~to;
-    node.white &= ~to;
-    node.castle &= ~("a1h1"_b & to);
-//  }
+  remove(node, to);
+  node.white &= ~to;
+  node.castle &= ~("a1h1"_b & to);
 }
 
 // move::king
@@ -161,12 +158,12 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_double) noexcept {
   execute(node, from, to, side, move::pawn_single{});
-  node.en_passant = to << 8;
+  node.en_passant = to >> 8;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn_double) noexcept {
   execute(node, from, to, side, move::pawn_single{});
-  node.en_passant = to >> 8;
+  node.en_passant = to << 8;
 }
 
 // move::pawn_capture
@@ -290,14 +287,16 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 // move::en_passant
 
 void execute(node& node, uint64_t from, uint64_t to, white_side, move::pawn_capture_en_passant) noexcept {
-  node.pawn |= from;
-  node.black |= from;
+  node.pawn &= ~(to >> 8);
+  node.black &= ~(to >> 8);
+  node.pawn ^= from | to;
   node.white ^= from | to;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side, move::pawn_capture_en_passant) noexcept {
-  node.pawn |= from;
-  node.white |= from;
+  node.pawn &= ~(to << 8);
+  node.white &= ~(to << 8);
+  node.pawn ^= from | to;
   node.black ^= from | to;
 }
 
