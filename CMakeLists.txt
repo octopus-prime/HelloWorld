@@ -9,7 +9,7 @@ project(HelloWorld CXX)
 
  if(MSVC)
 	message(STATUS "compiler=msvc")
-	add_compile_options(/Ox /arch:AVX2)
+	add_compile_options(/Ox /arch:AVX2 /Gy)
 else()
 	message(STATUS "compiler=gcc")
 	add_compile_options(-O3 -march=native)
