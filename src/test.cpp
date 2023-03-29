@@ -5,6 +5,7 @@
 #include <regex>
 #include <string_view>
 #include <thread>
+#include <semaphore>
 #include <fstream>
 #include <iostream>
 #include <format>
