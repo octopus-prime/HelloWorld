@@ -4,6 +4,8 @@
 #include <iostream>
 
 int main() {
+//  const position position{"r1b1k1n1/5pr1/n1p5/1pbPp1q1/Pp5P/N1PPBP1B/8/2RQK2R w K -"};
+//  position.printt(3);
 //  const test t{"r4br1/8/2Q2npp/Pkn1p3/8/2PPP1qP/4bP2/RNB1KB2 b Q -,1,18,888,16244,779306,14947584"};
 //  std::cout << "N = " << t.run() << std::endl;
 

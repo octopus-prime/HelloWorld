@@ -26,14 +26,14 @@ void execute(node& node, uint64_t from, uint64_t to, white_side side, move::king
   remove(node, to, side);
   node.king ^= from | to;
   node.white ^= from | to;
-  node.castle |= "a1h1"_b;
+  node.castle &= ~"a1h1"_b;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::king) noexcept {
   remove(node, to, side);
   node.king ^= from | to;
   node.black ^= from | to;
-  node.castle |= "a8h8"_b;
+  node.castle &= ~"a8h8"_b;
 }
 
 // move::king_castle_short
@@ -42,14 +42,14 @@ void execute(node& node, uint64_t, uint64_t, white_side, move::king_castle_short
   node.king ^= "e1g1"_b;
   node.rook_queen ^= "h1f1"_b;
   node.white ^= "e1f1g1h1"_b;
-  node.castle |= "a1h1"_b;
+  node.castle &= ~"a1h1"_b;
 }
 
 void execute(node& node, uint64_t, uint64_t, black_side, move::king_castle_short) noexcept {
   node.king ^= "e8g8"_b;
   node.rook_queen ^= "h8f8"_b;
   node.black ^= "e8f8g8h8"_b;
-  node.castle |= "a8h8"_b;
+  node.castle &= ~"a8h8"_b;
 }
 
 // move::king_castle_long
@@ -58,14 +58,14 @@ void execute(node& node, uint64_t, uint64_t, white_side, move::king_castle_long)
   node.king ^= "e1c1"_b;
   node.rook_queen ^= "a1d1"_b;
   node.white ^= "a1c1d1e1"_b;
-  node.castle |= "a1h1"_b;
+  node.castle &= ~"a1h1"_b;
 }
 
 void execute(node& node, uint64_t, uint64_t, black_side, move::king_castle_long) noexcept {
   node.king ^= "e8c8"_b;
   node.rook_queen ^= "a8d8"_b;
   node.black ^= "a8c8d8e8"_b;
-  node.castle |= "a8h8"_b;
+  node.castle &= ~"a8h8"_b;
 }
 
 // move::queen
@@ -90,14 +90,14 @@ void execute(node& node, uint64_t from, uint64_t to, white_side side, move::rook
   remove(node, to, side);
   node.rook_queen ^= from | to;
   node.white ^= from | to;
-  node.castle |= "a1h1"_b & from;
+  node.castle &= ~("a1h1"_b & from);
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::rook) noexcept {
   remove(node, to, side);
   node.rook_queen ^= from | to;
   node.black ^= from | to;
-  node.castle |= "a8h8"_b & from;
+  node.castle &= ~("a8h8"_b & from);
 }
 
 // move::bishop

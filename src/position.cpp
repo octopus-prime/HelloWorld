@@ -71,16 +71,16 @@ position::position(std::string_view fen) : node(), color() {
     for (auto ch : m[10].str()) {
       switch (ch) {
       case 'K':
-        node.castle |= "g1"_b;
+        node.castle |= "h1"_b;
         break;
       case 'Q':
-        node.castle |= "c1"_b;
+        node.castle |= "a1"_b;
         break;
       case 'k':
-        node.castle |= "g8"_b;
+        node.castle |= "h8"_b;
         break;
       case 'q':
-        node.castle |= "c8"_b;
+        node.castle |= "a8"_b;
         break;
       }
     }
