@@ -24,7 +24,7 @@ test::test(std::string_view row) {
 
 size_t test::run() const {
   size_t count = 0;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 4; ++i) {
     size_t n = position.perft(i + 1);
     if (n != expected[i])
       throw std::runtime_error(std::format("kaputtnik: d={}, n={}, e={}", i + 1, n, expected[i]));
