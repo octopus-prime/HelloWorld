@@ -22,12 +22,12 @@ test::test(std::string_view row) {
   }
 }
 
-size_t test::run() const {
+std::expected<size_t, std::string> test::run() const noexcept {
   size_t count = 0;
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 5; ++i) {
     size_t n = position.perft(i + 1);
     if (n != expected[i])
-      throw std::runtime_error(std::format("kaputtnik: d={}, n={}, e={}", i + 1, n, expected[i]));
+      return std::unexpected(std::format("kaputtnik: d={}, n={}, e={}", i + 1, n, expected[i]));
     count += n;
   }
   return count;
@@ -44,8 +44,13 @@ size_t test::run(std::string_view file) {
     in.getline(line, 256);
     std::cout << line << std::endl;
     const struct test test{line};
-    workers.emplace_back([test, &count, &slots]() {
-      count += test.run();
+    workers.emplace_back([test, &count, &slots]() noexcept {
+      const auto result = test.run();
+      if (result.has_value()) {
+        count += result.value();
+      } else {
+        std::cerr << result.error() << std::endl;
+      }
       slots.release();
     });
   }
