@@ -22,9 +22,9 @@ test::test(std::string_view row) {
   }
 }
 
-std::expected<size_t, std::string> test::run() const noexcept {
+std::expected<size_t, std::string> test::run(int depth) const noexcept {
   size_t count = 0;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < depth; ++i) {
     size_t n = position.perft(i + 1);
     if (n != expected[i])
       return std::unexpected(std::format("kaputtnik: d={}, n={}, e={}", i + 1, n, expected[i]));
@@ -33,10 +33,10 @@ std::expected<size_t, std::string> test::run() const noexcept {
   return count;
 }
 
-size_t test::run(std::string_view file) {
-  std::atomic_size_t count{};
+size_t test::run(std::string_view file, int depth) {
+  std::atomic_size_t count{0};
   std::vector<std::jthread> workers{};
-  std::counting_semaphore slots{std::jthread::hardware_concurrency()};
+  std::counting_semaphore<> slots{std::jthread::hardware_concurrency()};
   std::ifstream in{file.data()};
   while (!in.eof()) {
     slots.acquire();
@@ -44,8 +44,8 @@ size_t test::run(std::string_view file) {
     in.getline(line, 256);
     std::cout << line << std::endl;
     const struct test test{line};
-    workers.emplace_back([test, &count, &slots]() noexcept {
-      const auto result = test.run();
+    workers.emplace_back([test, depth, &count, &slots]() noexcept {
+      const auto result = test.run(depth);
       if (result.has_value()) {
         count += result.value();
       } else {

@@ -11,7 +11,7 @@ struct test {
   std::array<size_t, 6> expected;
 
   test(std::string_view row);
-  std::expected<size_t, std::string> run() const noexcept;
+  std::expected<size_t, std::string> run(int depth) const noexcept;
 
-  static size_t run(std::string_view file);
+  static size_t run(std::string_view file, int depth);
 };

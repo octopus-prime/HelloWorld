@@ -128,20 +128,6 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::knig
   node.black ^= from | to;
 }
 
-// move::knight_capture
-
-void execute(node& node, uint64_t from, uint64_t to, white_side side, move::knight_capture) noexcept {
-  remove(node, to, side);
-  node.knight ^= from | to;
-  node.white ^= from | to;
-}
-
-void execute(node& node, uint64_t from, uint64_t to, black_side side, move::knight_capture) noexcept {
-  remove(node, to, side);
-  node.knight ^= from | to;
-  node.black ^= from | to;
-}
-
 // move::pawn_single
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_single) noexcept {
@@ -181,14 +167,14 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 // move::pawn_single_promote_queen
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_single_promote_queen) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.rook_queen ^= to;
   node.bishop_queen ^= to;
   node.white ^= from | to;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn_single_promote_queen) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.rook_queen ^= to;
   node.bishop_queen ^= to;
   node.black ^= from | to;
@@ -209,13 +195,13 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 // move::pawn_single_promote_rook
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_single_promote_rook) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.rook_queen ^= to;
   node.white ^= from | to;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn_single_promote_rook) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.rook_queen ^= to;
   node.black ^= from | to;
 }
@@ -235,13 +221,13 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 // move::pawn_single_promote_bishop
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_single_promote_bishop) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.bishop_queen ^= to;
   node.white ^= from | to;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn_single_promote_bishop) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.bishop_queen ^= to;
   node.black ^= from | to;
 }
@@ -261,13 +247,13 @@ void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn
 // move::pawn_single_promote_knight
 
 void execute(node& node, uint64_t from, uint64_t to, white_side side, move::pawn_single_promote_knight) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.knight ^= to;
   node.white ^= from | to;
 }
 
 void execute(node& node, uint64_t from, uint64_t to, black_side side, move::pawn_single_promote_knight) noexcept {
-  node.pawn |= from;
+  node.pawn ^= from;
   node.knight ^= to;
   node.black ^= from | to;
 }

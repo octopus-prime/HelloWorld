@@ -39,10 +39,6 @@ void print(std::ostream& stream, int from, int to, move::knight) {
   stream << 'N' << square(from).view << square(to).view;
 }
 
-void print(std::ostream& stream, int from, int to, move::knight_capture) {
-  stream << 'N' << square(from).view << square(to).view;
-}
-
 void print(std::ostream& stream, int from, int to, move::pawn_single) {
   stream << 'P' << square(from).view << square(to).view;
 }

@@ -10,7 +10,6 @@ struct move {
   struct rook {};
   struct bishop {};
   struct knight {};
-  struct knight_capture {};
   struct pawn_single {};
   struct pawn_single_promote_queen {};
   struct pawn_single_promote_rook {};
