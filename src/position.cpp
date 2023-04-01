@@ -97,14 +97,14 @@ std::string_view intend = "                                         ";
 
 template <typename side>
 size_t search(const node& node, int depth) noexcept {
-  if (depth == 0)
-    return 1;
+//  if (depth == 0)
+//    return 1;
   size_t count = 0;
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
     if (!succ.check<side>()) {
-      count += search<flip<side>>(succ, depth - 1);
+      count += depth > 1 ? search<flip<side>>(succ, depth - 1) : 1;
     }
   }
   return count;
