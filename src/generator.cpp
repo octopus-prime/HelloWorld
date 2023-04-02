@@ -55,11 +55,6 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
       moves[index++] = {move::king{}, from, to};
   };
 
-  auto checks = node.check<side>();
-
-  if (std::popcount(checks) > 1)
-    return moves.subspan(0, index);
-
   const auto generate_castle_w = [&]() noexcept {
     auto occupied = node.white | node.black;
     constexpr int e1 = "e1"_s;
@@ -199,8 +194,12 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
       moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
 
+  auto checks = node.check<side>();
+
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);
+    if (std::popcount(checks) > 1)
+        return moves.subspan(0, index);
     generate_castle_w();
     generate_knights(node.white);
     generate_rooks_queens(node.white);
@@ -208,6 +207,8 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     generate_pawns_w();
   } else {
     generate_kings(node.black);
+    if (std::popcount(checks) > 1)
+        return moves.subspan(0, index);
     generate_castle_b();
     generate_knights(node.black);
     generate_rooks_queens(node.black);
