@@ -25,9 +25,6 @@ node::node(uint64_t white, uint64_t black, uint64_t king, uint64_t rook_queen, u
       castle(castle),
       en_passant(en_passant) {}
 
-node::node(const std::string_view fen) {
-}
-
 template <typename side>
 node::node(const node& node_, const move& move, side) noexcept : node(node_) {
   execute<side>(*this, move);

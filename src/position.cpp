@@ -26,7 +26,7 @@ position::position() :
 
 static const std::regex re2("(.*)/(.*)/(.*)/(.*)/(.*)/(.*)/(.*)/(.*) ([wb]) ([-KQkq]+) ([-a-h1-8]+)( \\d+)?( \\d+)?");
 
-position::position(std::string_view fen) : node(), color() {
+position::position(std::string_view fen) : node{}, color{} {
   std::cmatch m;
   if (!std::regex_search(fen.data(), m, re2))
     throw std::runtime_error("fen not matched by regex");
@@ -103,9 +103,8 @@ size_t search(const node& node, int depth) noexcept {
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
-    if (!succ.check<side>()) {
+    if (!succ.check<side>())
       count += depth > 1 ? search<flip<side>>(succ, depth - 1) : 1;
-    }
   }
   return count;
 }

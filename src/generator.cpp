@@ -46,36 +46,35 @@ template<typename side>
 std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept {
   int index = 0;
 
+  auto attacked = node.attacks<flip<side>>();
+
   const auto generate_kings = [&](uint64_t self) noexcept {
     char from = std::countr_zero(node.king & self);
     uint64_t out = lookup_kings[from];
-    for (char to : square_view(out & ~self))
+    for (char to : square_view(out & ~self & ~attacked))
       moves[index++] = {move::king{}, from, to};
   };
 
+  auto checks = node.check<side>();
+
+  if (std::popcount(checks) > 1)
+    return moves.subspan(0, index);
+
   const auto generate_castle_w = [&]() noexcept {
     auto occupied = node.white | node.black;
-      constexpr int e1 = "e1"_s;
-      if ((node.castle & "h1"_b) && !(occupied & "f1g1"_b) &&
-          !node.attacked<white_side>(e1, node.black) && !node.attacked<white_side>(e1 + 1, node.black) &&
-          !node.attacked<white_side>(e1 + 2, node.black))
-        moves[index++] = {move::king_castle_short{}, e1, e1 + 2};
-      if ((node.castle & "a1"_b) && !(occupied & "b1c1d1"_b) &&
-          !node.attacked<white_side>(e1, node.black) && !node.attacked<white_side>(e1 - 1, node.black) &&
-          !node.attacked<white_side>(e1 - 2, node.black))
-        moves[index++] = {move::king_castle_long{}, e1, e1 - 2};
+    constexpr int e1 = "e1"_s;
+    if ((node.castle & "h1"_b) && !(occupied & "f1g1"_b) && !(attacked & "e1f1g1"_b))
+      moves[index++] = {move::king_castle_short{}, e1, e1 + 2};
+    if ((node.castle & "a1"_b) && !(occupied & "b1c1d1"_b) && !(attacked & "e1d1c1"_b))
+      moves[index++] = {move::king_castle_long{}, e1, e1 - 2};
   };
 
   const auto generate_castle_b = [&]() noexcept {
     auto occupied = node.white | node.black;
     constexpr int e8 = "e8"_s;
-    if ((node.castle & "h8"_b) && !(occupied & "f8g8"_b) &&
-        !node.attacked<black_side>(e8, node.white) && !node.attacked<black_side>(e8 + 1, node.white) &&
-        !node.attacked<black_side>(e8 + 2, node.white))
+    if ((node.castle & "h8"_b) && !(occupied & "f8g8"_b) && !(attacked & "e8f8g8"_b))
       moves[index++] = {move::king_castle_short{}, e8, e8 + 2};
-    if ((node.castle & "a8"_b) && !(occupied & "b8c8d8"_b) &&
-        !node.attacked<black_side>(e8, node.white) && !node.attacked<black_side>(e8 - 1, node.white) &&
-        !node.attacked<black_side>(e8 - 2, node.white))
+    if ((node.castle & "a8"_b) && !(occupied & "b8c8d8"_b) && !(attacked & "e8d8c8"_b))
       moves[index++] = {move::king_castle_long{}, e8, e8 - 2};
   };
 

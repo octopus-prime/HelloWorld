@@ -113,6 +113,22 @@ constexpr uint64_t expand_sliders(uint64_t in, uint64_t empty) noexcept {
   });
 }
 
+template <typename side>
+uint64_t attacks(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept {
+  uint64_t out = 0;
+  auto king = kings & self;
+  auto empty = ~(self | other) | (kings & other);
+  out |= expand_kings(king);
+  out |= expand_knights(knights & self);
+  out |= expand_rooks(rooks & self, empty);
+  out |= expand_bishops(bishops & self, empty);
+  out |= expand_pawns(pawns & self, side{});
+  return out;
+}
+
+template uint64_t attacks<white_side>(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept;
+template uint64_t attacks<black_side>(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept;
+
 constexpr uint64_t blockers_permutation(uint64_t iteration, uint64_t mask) noexcept {
   uint64_t blockers = 0ull;
   while (iteration != 0ull) {
