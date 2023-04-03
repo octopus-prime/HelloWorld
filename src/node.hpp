@@ -34,7 +34,7 @@ struct node {
   uint64_t attacked(int sqaure, uint64_t color) const noexcept;
 
   template <typename side>
-  bool check() const noexcept;
+  uint64_t check() const noexcept;
 };
 
 
@@ -63,13 +63,13 @@ inline uint64_t node::attacked(int square, uint64_t color) const noexcept {
 }
 
 template <>
-inline bool node::check<white_side>() const noexcept {
+inline uint64_t node::check<white_side>() const noexcept {
   auto square = std::countr_zero(king & white);
   return attacked<white_side>(square, black);
 }
 
 template <>
-inline bool node::check<black_side>() const noexcept {
+inline uint64_t node::check<black_side>() const noexcept {
   auto square = std::countr_zero(king & black);
   return attacked<black_side>(square, white);
 }
