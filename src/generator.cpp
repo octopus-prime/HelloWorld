@@ -4,6 +4,8 @@
 #include "side.hpp"
 #include <ranges>
 
+#include <iostream>
+
 class square_view
 {
 public:
@@ -47,6 +49,8 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   int index = 0;
 
   auto attacked = node.attacks<flip<side>>();
+  auto checks = node.check<side>();
+  auto valids = ~0ull;
 
   const auto generate_kings = [&](uint64_t self) noexcept {
     char from = std::countr_zero(node.king & self);
@@ -76,7 +80,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   const auto generate_knights = [&](uint64_t self) noexcept {
     for (char from : square_view(node.knight & self)) {
       uint64_t out = lookup_knights[from];
-      for (char to : square_view(out & ~self))
+      for (char to : square_view(out & ~self & valids))
         moves[index++] = {move::knight{}, from, to};
     }
   };
@@ -86,7 +90,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char from : square_view(node.rook_queen & self)) {
       auto tag = rook_or_queen[bool((1ull << from) & node.bishop_queen)];
       uint64_t out = lookup_rook_queen(from, node.white | node.black);
-      for (char to : square_view(out & ~self))
+      for (char to : square_view(out & ~self & valids))
         moves[index++] = {tag, from, to};
     }
   };
@@ -97,7 +101,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
       auto tag = bishop_or_queen[bool((1ull << from) & node.rook_queen)];
 //      bool queen = (1ull << from) & node.rook_queen;
       uint64_t out = lookup_bishop_queen(from, node.white | node.black);
-      for (char to : square_view(out & ~self))
+      for (char to : square_view(out & ~self & valids))
         moves[index++] = {tag, from, to};
     }
   };
@@ -150,19 +154,19 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     const auto pawn = node.pawn & node.white;
 
     const auto front = (pawn << 8) & ~(node.white | node.black);
-    for (char to : square_view(front))
+    for (char to : square_view(front & valids))
       generate_single_promote_w(to - 8, to);
 
     const auto front2 = ((front >> 8) & "2"_r) << 16;
-    for (char to : square_view(front2 & ~(node.white | node.black)))
+    for (char to : square_view(front2 & ~(node.white | node.black) & valids))
       moves[index++] = {move::pawn_double{}, char(to - 16), to};
 
     const auto left = (pawn << 7) & ~"h"_f;
-    for (char to : square_view(left & node.black))
+    for (char to : square_view(left & node.black & valids))
       generate_capture_promote_w(to - 7, to);
 
     const auto right = (pawn << 9) & ~"a"_f;
-    for (char to : square_view(right & node.black))
+    for (char to : square_view(right & node.black & valids))
       generate_capture_promote_w(to - 9, to);
 
     const auto en_passant = (((node.en_passant >> 7) & ~"a"_f) | ((node.en_passant >> 9) & ~"h"_f)) & node.pawn & node.white;
@@ -174,19 +178,19 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     const auto pawn = node.pawn & node.black;
 
     const auto front = (pawn >> 8) & ~(node.white | node.black);
-    for (char to : square_view(front))
+    for (char to : square_view(front & valids))
       generate_single_promote_b(to + 8, to);
 
     const auto front2 = ((front << 8) & "7"_r) >> 16;
-    for (char to : square_view(front2 & ~(node.white | node.black)))
+    for (char to : square_view(front2 & ~(node.white | node.black) & valids))
       moves[index++] = {move::pawn_double{}, char(to + 16), to};
 
     const auto left = (pawn >> 9) & ~"h"_f;
-    for (char to : square_view(left & node.white))
+    for (char to : square_view(left & node.white & valids))
       generate_capture_promote_b(to + 9, to);
 
     const auto right = (pawn >> 7) & ~"a"_f;
-    for (char to : square_view(right & node.white))
+    for (char to : square_view(right & node.white & valids))
       generate_capture_promote_b(to + 7, to);
 
     const auto en_passant = (((node.en_passant << 7) & ~"h"_f) | ((node.en_passant << 9) & ~"a"_f)) & node.pawn & node.black;
@@ -194,13 +198,17 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
       moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
 
-  auto checks = node.check<side>();
-
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);
     if (std::popcount(checks) > 1)
         return moves.subspan(0, index);
-    generate_castle_w();
+    if (std::popcount(checks) == 1) {
+      auto to = std::countr_zero(checks);
+      auto from = std::countr_zero(node.king & node.white);
+      valids = lookup_lines[from][to];
+    }
+    else
+      generate_castle_w();
     generate_knights(node.white);
     generate_rooks_queens(node.white);
     generate_bishops_queens(node.white);
@@ -209,7 +217,13 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     generate_kings(node.black);
     if (std::popcount(checks) > 1)
         return moves.subspan(0, index);
-    generate_castle_b();
+    if (std::popcount(checks) == 1) {
+      auto to = std::countr_zero(checks);
+      auto from = std::countr_zero(node.king & node.black);
+      valids = lookup_lines[from][to];
+    }
+    else
+      generate_castle_b();
     generate_knights(node.black);
     generate_rooks_queens(node.black);
     generate_bishops_queens(node.black);

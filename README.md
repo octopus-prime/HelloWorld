@@ -24,3 +24,13 @@ perft 7
 
 ## Stockfish
 stockfish bench 0 1 7 current perft
+
+
+
+## Master
+n = 3195901860
+c = 27690545
+
+## Branch
+n = 3195901860
+c = 5403428

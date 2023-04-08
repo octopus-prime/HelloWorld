@@ -9,6 +9,7 @@
 #include <regex>
 #include <atomic>
 #include <thread>
+#include <tuple>
 
 position::position() :
   node{
@@ -97,8 +98,8 @@ std::string_view intend = "                                         ";
 
 template <typename side>
 size_t search(const node& node, int depth) noexcept {
-//  if (depth == 0)
-//    return 1;
+  //  if (depth == 0)
+  //    return 1;
   size_t count = 0;
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
@@ -107,6 +108,28 @@ size_t search(const node& node, int depth) noexcept {
       count += depth > 1 ? search<flip<side>>(succ, depth - 1) : 1;
   }
   return count;
+}
+
+template <typename side>
+std::tuple<size_t, size_t> search2(const node& node, int depth) noexcept {
+  //  if (depth == 0)
+  //    return 1;
+  size_t count = 0;
+  size_t checks = 0;
+  move moves[256];
+  for (const move& move : node.generate<side>(moves)) {
+    const struct node succ(node, move, side{});
+    if (!succ.check<side>()) {
+      if (depth > 1) {
+        auto [cn,cs] = search2<flip<side>>(succ, depth - 1);
+        count += cn;
+        checks += cs;
+      } else
+        ++count;
+    } else
+      ++checks;
+  }
+  return {count, checks};
 }
 
 template <typename side>
@@ -126,6 +149,12 @@ void print(const node& node, int depth, int height) {
 size_t position::perft(int depth) const noexcept {
   return std::visit([this, depth] <typename side>(side) noexcept {
     return search<side>(node, depth);
+  }, color);
+}
+
+std::tuple<size_t, size_t> position::perft2(int depth) const noexcept {
+  return std::visit([this, depth] <typename side>(side) noexcept {
+    return search2<side>(node, depth);
   }, color);
 }
 

@@ -27,6 +27,7 @@ extern const std::array<uint64_t, 64> lookup_pawns_w;
 extern const std::array<uint64_t, 64> lookup_pawns_b;
 extern const sliders_lookup lookup_rook_queen;
 extern const sliders_lookup lookup_bishop_queen;
+extern const std::array<std::array<uint64_t, 64>, 64> lookup_lines;
 
 template<typename side>
 uint64_t attacks(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept;
