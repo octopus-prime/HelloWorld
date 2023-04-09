@@ -169,7 +169,8 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char to : square_view(right & node.black & valids))
       generate_capture_promote_w(to - 9, to);
 
-    const auto en_passant = (((node.en_passant >> 7) & ~"a"_f) | ((node.en_passant >> 9) & ~"h"_f)) & node.pawn & node.white;
+    auto ep = node.en_passant & (valids | ((checks & node.pawn & node.black & node.en_passant >> 8) << 8));
+    const auto en_passant = (((ep >> 7) & ~"a"_f) | ((ep >> 9) & ~"h"_f)) & node.pawn & node.white;
     for (char from : square_view(en_passant))
       moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
@@ -193,7 +194,8 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char to : square_view(right & node.white & valids))
       generate_capture_promote_b(to + 7, to);
 
-    const auto en_passant = (((node.en_passant << 7) & ~"h"_f) | ((node.en_passant << 9) & ~"a"_f)) & node.pawn & node.black;
+    auto ep = node.en_passant & (valids | ((checks & node.pawn & node.white & node.en_passant << 8) >> 8));
+    const auto en_passant = (((ep << 7) & ~"h"_f) | ((ep << 9) & ~"a"_f)) & node.pawn & node.black;
     for (char from : square_view(en_passant))
       moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };

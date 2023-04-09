@@ -139,10 +139,10 @@ void print(const node& node, int depth, int height) {
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
-    if (!succ.check<side>()) {
+//    if (!succ.check<side>()) {
       std::cout << std::string_view{intend.data(), intend.data() + 2 * height} << move << std::endl;
       print<flip<side>>(succ, depth - 1, height + 1);
-    }
+//    }
   }
 }
 
