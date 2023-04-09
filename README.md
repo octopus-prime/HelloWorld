@@ -12,11 +12,11 @@ cmake --build build --config Release
 
 ## Performance (perft 7)
 
-|       | This       | Crafty     | Stockfish        |
-|-------|------------|------------|------------------|
-| Nodes | 3195901860 | 3195901860 | 3195901860       |
-| Time  | 32.50      | 46.76      | 12.30            |
-| Perf  | 98353479   | 68346917   | 259913944 (wtf!) |
+|       | This       | Crafty     | Stockfish  | QPerft     |
+|-------|------------|------------|------------|------------|
+| Nodes | 3195901860 | 3195901860 | 3195901860 | 3195901860 |
+| Time  | 32.50      | 46.76      | 12.30      | 12.66      |
+| Perf  | 98353479   | 68346917   | 259913944  | 252440905  |
 
 
 ## Crafty
@@ -25,6 +25,8 @@ perft 7
 ## Stockfish
 stockfish bench 0 1 7 current perft
 
+## QPerft
+perft 7
 
 
 ## Master
