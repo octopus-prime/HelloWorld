@@ -225,10 +225,6 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
         valid_b |= lookup_lines[king][square];
       }
     }
-    if (valid_r == 0ull)
-      valid_r = ~0ull;
-    if (valid_b == 0ull)
-      valid_b = ~0ull;
 //    std::cout << "king = " << king << std::endl;
 //    std::cout << "ksr = " << ksr << std::endl;
 //    std::cout << "ksb = " << ksb << std::endl;
@@ -237,7 +233,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
 //    std::cout << "pinned = " << all_pinned << std::endl;
 //    std::cout << "valid_r = " << valid_r << std::endl;
 //    std::cout << "valid_b = " << valid_b << std::endl;
-    };
+  };
 
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);

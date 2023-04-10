@@ -133,6 +133,24 @@ std::tuple<size_t, size_t> search2(const node& node, int depth) noexcept {
 }
 
 template <typename side>
+size_t search_legal(const node& node, int depth) noexcept {
+  //  if (depth == 0)
+  //    return 1;
+  size_t count = 0;
+  move moves[256];
+  for (const move& move : node.generate<side>(moves)) {
+    if (depth <= 1)
+      count += 1;
+    else {
+      const struct node succ(node, move, side{});
+      struct move moves2[256];
+      count += depth == 2 ? succ.generate<flip<side>>(moves2).size() : search_legal<flip<side>>(succ, depth - 1);
+    }
+  }
+  return count;
+}
+
+template <typename side>
 void print(const node& node, int depth, int height) {
   if (depth == 0)
     return;
@@ -155,6 +173,12 @@ size_t position::perft(int depth) const noexcept {
 std::tuple<size_t, size_t> position::perft2(int depth) const noexcept {
   return std::visit([this, depth] <typename side>(side) noexcept {
     return search2<side>(node, depth);
+  }, color);
+}
+
+size_t position::perft_legal(int depth) const noexcept {
+  return std::visit([this, depth] <typename side>(side) noexcept {
+    return search_legal<side>(node, depth);
   }, color);
 }
 

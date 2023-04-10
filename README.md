@@ -18,7 +18,6 @@ cmake --build build --config Release
 | Time  | 32.50      | 46.76      | 12.30      | 12.66      |
 | Perf  | 98353479   | 68346917   | 259913944  | 252440905  |
 
-
 ## Crafty
 perft 7
 
@@ -32,7 +31,17 @@ perft 7
 ## Master
 n = 3195901860
 c = 27690545
+t = 32.50
+p = 98353479
 
-## Branch
+## Branch (Pseudo + Filter)
 n = 3195901860
-c = 4733831
+c = 6
+t = 36.6345
+p = 87237453
+
+## Branch (Legal)
+n = 3195901866 (+6)
+c = 6
+t = 13.744
+p = 232531029

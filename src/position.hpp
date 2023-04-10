@@ -18,6 +18,7 @@ struct position {
 
   size_t perft(int depth) const noexcept;
   std::tuple<size_t, size_t> perft2(int depth) const noexcept;
+  size_t perft_legal(int depth) const noexcept;
   
   size_t perftp(int depth) const noexcept;
 
