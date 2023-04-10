@@ -2,6 +2,7 @@
 
 #include "side.hpp"
 #include "lookup.hpp"
+#include "square_view.hpp"
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -75,9 +76,6 @@ inline uint64_t node::check<black_side>() const noexcept {
   auto square = std::countr_zero(king & black);
   return attacked<black_side>(square, white);
 }
-
-//template bool node::check<white_side>() const noexcept;
-//template bool node::check<black_side>() const noexcept;
 
 template<>
 inline uint64_t node::attacks<white_side>() const noexcept {

@@ -2,47 +2,10 @@
 #include "lookup.hpp"
 #include "literal.hpp"
 #include "side.hpp"
+#include "square_view.hpp"
 #include <ranges>
 
 #include <iostream>
-
-class square_view
-{
-public:
-  class iterator
-	{
-  public:
-    constexpr iterator(const uint64_t board) noexcept : _board(board) {}
-
-    constexpr void operator++() const noexcept {}
-
-    constexpr bool operator!=(const iterator) const noexcept {
-      return _board != 0UL;
-    }
-
-    auto operator*() noexcept {
-      const auto square = std::countr_zero(_board);
-      _board ^= 1ull << square;
-      return square;
-    }
-
-  private:
-    uint64_t _board;
-  };
-
-  constexpr square_view(const uint64_t board) noexcept : _board(board)	{}
-
-  constexpr iterator begin() const noexcept {
-    return iterator(_board);
-  }
-
-  constexpr iterator end() const noexcept{
-    return iterator(0ull);
-  }
-
-private:
-  uint64_t _board;
-};
 
 template<typename side>
 std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept {
@@ -50,6 +13,11 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
 
   auto attacked = node.attacks<flip<side>>();
   auto checks = node.check<side>();
+
+  auto all_pinned = 0ull;
+  auto valid_r = 0ull;
+  auto valid_b = 0ull;
+
   auto valids = ~0ull;
 
   const auto generate_kings = [&](uint64_t self) noexcept {
@@ -78,7 +46,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   };
 
   const auto generate_knights = [&](uint64_t self) noexcept {
-    for (char from : square_view(node.knight & self)) {
+    for (char from : square_view(node.knight & self & ~all_pinned)) {
       uint64_t out = lookup_knights[from];
       for (char to : square_view(out & ~self & valids))
         moves[index++] = {move::knight{}, from, to};
@@ -90,6 +58,8 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char from : square_view(node.rook_queen & self)) {
       auto tag = rook_or_queen[bool((1ull << from) & node.bishop_queen)];
       uint64_t out = lookup_rook_queen(from, node.white | node.black);
+      if (all_pinned & 1ull << from)
+        out &= valid_r;
       for (char to : square_view(out & ~self & valids))
         moves[index++] = {tag, from, to};
     }
@@ -99,8 +69,9 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     constexpr move::tag_t bishop_or_queen[] = {move::bishop{}, move::queen{}};
     for (char from : square_view(node.bishop_queen & self)) {
       auto tag = bishop_or_queen[bool((1ull << from) & node.rook_queen)];
-//      bool queen = (1ull << from) & node.rook_queen;
       uint64_t out = lookup_bishop_queen(from, node.white | node.black);
+      if (all_pinned & 1ull << from)
+        out &= valid_b;
       for (char to : square_view(out & ~self & valids))
         moves[index++] = {tag, from, to};
     }
@@ -200,10 +171,47 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
       moves[index++] = {move::pawn_capture_en_passant{}, from, (char) std::countr_zero(node.en_passant)};
   };
 
+  const auto generate_blockers = [&](uint64_t self, uint64_t other) noexcept {
+    auto king = std::countr_zero(node.king & self);
+    auto ksr = lookup_rook_queen(king, node.white | node.black) & self;
+    auto ksb = lookup_bishop_queen(king, node.white | node.black) & self;
+    auto bcr = lookup_rook_queen(king, 0ull) & node.rook_queen & other;
+    auto bcb = lookup_bishop_queen(king, 0ull) & node.bishop_queen & other;
+    for (auto square : square_view{bcr}) {
+      auto rsk = lookup_rook_queen(square, node.white | node.black) & self;
+      auto pinned = (ksr & rsk);
+      all_pinned |= pinned;
+      if (pinned) {
+        valid_r |= lookup_lines[king][square];
+      }
+    }
+    for (auto square : square_view{bcb}) {
+      auto bsk = lookup_bishop_queen(square, node.white | node.black) & self;
+      auto pinned = (ksb & bsk);
+      all_pinned |= pinned;
+      if (pinned) {
+        valid_b |= lookup_lines[king][square];
+      }
+    }
+    if (valid_r == 0ull)
+      valid_r = ~0ull;
+    if (valid_b == 0ull)
+      valid_b = ~0ull;
+//    std::cout << "king = " << king << std::endl;
+//    std::cout << "ksr = " << ksr << std::endl;
+//    std::cout << "ksb = " << ksb << std::endl;
+//    std::cout << "bcr = " << bcr << std::endl;
+//    std::cout << "bcb = " << bcb << std::endl;
+//    std::cout << "pinned = " << all_pinned << std::endl;
+//    std::cout << "valid_r = " << valid_r << std::endl;
+//    std::cout << "valid_b = " << valid_b << std::endl;
+    };
+
   if constexpr (std::is_same_v<side, white_side>) {
     generate_kings(node.white);
     if (std::popcount(checks) > 1)
         return moves.subspan(0, index);
+    generate_blockers(node.white, node.black);
     if (std::popcount(checks) == 1) {
       auto to = std::countr_zero(checks);
       auto from = std::countr_zero(node.king & node.white);
@@ -219,6 +227,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     generate_kings(node.black);
     if (std::popcount(checks) > 1)
         return moves.subspan(0, index);
+    generate_blockers(node.black, node.white);
     if (std::popcount(checks) == 1) {
       auto to = std::countr_zero(checks);
       auto from = std::countr_zero(node.king & node.black);

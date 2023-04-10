@@ -18,13 +18,16 @@ auto todo4 = []() -> size_t { position{"4k3/8/5b2/4R3/8/8/8/4K3 b - - 0 1"}.prin
 auto todo5 = []() -> size_t { position{"4k3/8/6n1/4R3/8/8/8/4K3 b - - 0 1"}.printt(1); return 0; };
 auto todo6 = []() -> size_t { position{"8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1"}.printt(1); return 0; };
 auto todo7 = []() -> size_t { position{"8/8/8/2k5/3Pp3/8/8/4K3 b - d3 0 1"}.printt(1); return 0; };
+auto todo8 = []() -> size_t { position{"4k3/8/4r3/8/8/4Q3/8/2K5 b - - 0 1"}.printt(1); return 0; };
+auto todo9 = []() -> size_t { position{"R2rk1rR/5b2/8/4q2B/8/4Q3/1B6/2K5 b - - 0 1"}.printt(1); return 0; };
+auto todo10 = []() -> size_t { position{"4k3/5n2/8/7B/8/8/8/4K3 b - - 0 1"}.printt(1); return 0; };
 
 void run() {
   using as_floating_point = std::chrono::duration<double, std::ratio<1>>;
 
   auto time0 = std::chrono::high_resolution_clock::now();
   auto [count,checks] = todo2();
-//  auto count = todo7();
+//  auto count = todo10();
 //  auto checks = 0;
   auto time1 = std::chrono::high_resolution_clock::now();
   auto time = duration_cast<as_floating_point>(time1 - time0).count();
