@@ -124,12 +124,20 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   const auto generate_pawns_w = [&]() noexcept {
     const auto pawn = node.pawn & node.white;
 
-    const auto front = (pawn << 8) & ~(node.white | node.black);
-    for (char to : square_view(front & valids))
+    const auto fronta = ((~all_pinned & pawn) << 8) & ~(node.white | node.black);
+    for (char to : square_view(fronta & valids))
       generate_single_promote_w(to - 8, to);
 
-    const auto front2 = ((front >> 8) & "2"_r) << 16;
+    const auto frontb = ((all_pinned & pawn) << 8) & ~(node.white | node.black);
+    for (char to : square_view(frontb & valids & valid_r))
+      generate_single_promote_w(to - 8, to);
+
+    const auto front2 = ((fronta >> 8) & "2"_r) << 16;
     for (char to : square_view(front2 & ~(node.white | node.black) & valids))
+      moves[index++] = {move::pawn_double{}, char(to - 16), to};
+
+    const auto front3 = ((frontb >> 8) & "2"_r) << 16;
+    for (char to : square_view(front3 & ~(node.white | node.black) & valids & valid_r))
       moves[index++] = {move::pawn_double{}, char(to - 16), to};
 
     const auto left = (pawn << 7) & ~"h"_f;
@@ -149,12 +157,20 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   const auto generate_pawns_b = [&]() noexcept {
     const auto pawn = node.pawn & node.black;
 
-    const auto front = (pawn >> 8) & ~(node.white | node.black);
-    for (char to : square_view(front & valids))
+    const auto fronta = ((~all_pinned & pawn) >> 8) & ~(node.white | node.black);
+    for (char to : square_view(fronta & valids))
       generate_single_promote_b(to + 8, to);
 
-    const auto front2 = ((front << 8) & "7"_r) >> 16;
+    const auto frontb = ((all_pinned & pawn) >> 8) & ~(node.white | node.black);
+    for (char to : square_view(frontb & valids & valid_r))
+      generate_single_promote_b(to + 8, to);
+
+    const auto front2 = ((fronta << 8) & "7"_r) >> 16;
     for (char to : square_view(front2 & ~(node.white | node.black) & valids))
+      moves[index++] = {move::pawn_double{}, char(to + 16), to};
+
+    const auto front3 = ((frontb << 8) & "7"_r) >> 16;
+    for (char to : square_view(front3 & ~(node.white | node.black) & valids & valid_r))
       moves[index++] = {move::pawn_double{}, char(to + 16), to};
 
     const auto left = (pawn >> 9) & ~"h"_f;
