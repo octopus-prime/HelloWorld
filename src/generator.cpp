@@ -140,12 +140,20 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char to : square_view(front3 & ~(node.white | node.black) & valids & valid_r))
       moves[index++] = {move::pawn_double{}, char(to - 16), to};
 
-    const auto left = (pawn << 7) & ~"h"_f;
-    for (char to : square_view(left & node.black & valids))
+    const auto lefta = ((~all_pinned & pawn) << 7) & ~"h"_f;
+    for (char to : square_view(lefta & node.black & valids))
       generate_capture_promote_w(to - 7, to);
 
-    const auto right = (pawn << 9) & ~"a"_f;
-    for (char to : square_view(right & node.black & valids))
+    const auto leftb = ((all_pinned & pawn) << 7) & ~"h"_f;
+    for (char to : square_view(leftb & node.black & valids & valid_b))
+      generate_capture_promote_w(to - 7, to);
+
+    const auto righta = ((~all_pinned & pawn) << 9) & ~"a"_f;
+    for (char to : square_view(righta & node.black & valids))
+      generate_capture_promote_w(to - 9, to);
+
+    const auto rightb = ((all_pinned & pawn) << 9) & ~"a"_f;
+    for (char to : square_view(rightb & node.black & valids & valid_b))
       generate_capture_promote_w(to - 9, to);
 
     auto ep = node.en_passant & (valids | ((checks & node.pawn & node.black & node.en_passant >> 8) << 8));
@@ -173,12 +181,20 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
     for (char to : square_view(front3 & ~(node.white | node.black) & valids & valid_r))
       moves[index++] = {move::pawn_double{}, char(to + 16), to};
 
-    const auto left = (pawn >> 9) & ~"h"_f;
-    for (char to : square_view(left & node.white & valids))
+    const auto lefta = ((~all_pinned & pawn) >> 9) & ~"h"_f;
+    for (char to : square_view(lefta & node.white & valids))
       generate_capture_promote_b(to + 9, to);
 
-    const auto right = (pawn >> 7) & ~"a"_f;
-    for (char to : square_view(right & node.white & valids))
+    const auto leftb = ((all_pinned & pawn) >> 9) & ~"h"_f;
+    for (char to : square_view(leftb & node.white & valids & valid_b))
+      generate_capture_promote_b(to + 9, to);
+
+    const auto righta = ((~all_pinned & pawn) >> 7) & ~"a"_f;
+    for (char to : square_view(righta & node.white & valids))
+      generate_capture_promote_b(to + 7, to);
+
+    const auto rightb = ((all_pinned & pawn) >> 7) & ~"a"_f;
+    for (char to : square_view(rightb & node.white & valids & valid_b))
       generate_capture_promote_b(to + 7, to);
 
     auto ep = node.en_passant & (valids | ((checks & node.pawn & node.white & node.en_passant << 8) >> 8));
