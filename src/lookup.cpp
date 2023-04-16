@@ -1,7 +1,10 @@
 #include "lookup.hpp"
 #include "literal.hpp"
 #include "side.hpp"
+#include <cmath>
 #include <ranges>
+
+#include <iostream>
 
 constexpr uint64_t expand(uint64_t in, auto&& view) noexcept {
   return std::transform_reduce(view.begin(), view.end(), 0ull, std::bit_or{}, [in](auto&& tuple) noexcept {
@@ -113,6 +116,22 @@ constexpr uint64_t expand_sliders(uint64_t in, uint64_t empty) noexcept {
   });
 }
 
+template <typename side>
+uint64_t attacks(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept {
+  uint64_t out = 0;
+  auto king = kings & self;
+  auto empty = ~(self | other) | (kings & other);
+  out |= expand_kings(king);
+  out |= expand_knights(knights & self);
+  out |= expand_rooks(rooks & self, empty);
+  out |= expand_bishops(bishops & self, empty);
+  out |= expand_pawns(pawns & self, side{});
+  return out;
+}
+
+template uint64_t attacks<white_side>(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept;
+template uint64_t attacks<black_side>(uint64_t kings, uint64_t rooks, uint64_t bishops, uint64_t knights, uint64_t pawns, uint64_t self, uint64_t other) noexcept;
+
 constexpr uint64_t blockers_permutation(uint64_t iteration, uint64_t mask) noexcept {
   uint64_t blockers = 0ull;
   while (iteration != 0ull) {
@@ -194,4 +213,28 @@ const sliders_lookup lookup_bishop_queen = []() noexcept {
   }
 
   return sliders_lookup{blocks};
+}();
+
+const std::array<std::array<uint64_t, 64>, 64> lookup_lines = []() noexcept {
+  std::array<std::array<uint64_t, 64>, 64> x;
+  for (int from = 0; from < 64; ++from) {
+    for (int to = 0; to < 64; ++to) {
+      x[from][to] = (1ull << from) | (1ull << to);
+      if (from == to)
+        continue;
+      auto y = lookup_bishop_queen(from, 0ull) | lookup_rook_queen(from, 0ull);
+      if ((y & 1ull << to) == 0ull)
+        continue;
+      for (auto square = from; square != to; ) {
+        x[from][to] |= 1ull << square;
+        auto from_file = from % 8;
+        auto from_rank = from / 8;
+        auto to_file = to % 8;
+        auto to_rank = to / 8;
+        square += (from_file == to_file) ? 0 : (from_file > to_file) ? -1 : +1;
+        square += (from_rank == to_rank) ? 0 : (from_rank > to_rank) ? -8 : +8;
+      }
+    }
+  }
+  return x;
 }();

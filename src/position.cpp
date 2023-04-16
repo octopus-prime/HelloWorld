@@ -9,6 +9,7 @@
 #include <regex>
 #include <atomic>
 #include <thread>
+#include <tuple>
 
 position::position() :
   node{
@@ -26,7 +27,7 @@ position::position() :
 
 static const std::regex re2("(.*)/(.*)/(.*)/(.*)/(.*)/(.*)/(.*)/(.*) ([wb]) ([-KQkq]+) ([-a-h1-8]+)( \\d+)?( \\d+)?");
 
-position::position(std::string_view fen) : node(), color() {
+position::position(std::string_view fen) : node{}, color{} {
   std::cmatch m;
   if (!std::regex_search(fen.data(), m, re2))
     throw std::runtime_error("fen not matched by regex");
@@ -97,14 +98,53 @@ std::string_view intend = "                                         ";
 
 template <typename side>
 size_t search(const node& node, int depth) noexcept {
-//  if (depth == 0)
-//    return 1;
+  //  if (depth == 0)
+  //    return 1;
   size_t count = 0;
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
-    if (!succ.check<side>()) {
+    if (!succ.check<side>())
       count += depth > 1 ? search<flip<side>>(succ, depth - 1) : 1;
+  }
+  return count;
+}
+
+template <typename side>
+std::tuple<size_t, size_t> search2(const node& node, int depth) noexcept {
+  //  if (depth == 0)
+  //    return 1;
+  size_t count = 0;
+  size_t checks = 0;
+  move moves[256];
+  for (const move& move : node.generate<side>(moves)) {
+    const struct node succ(node, move, side{});
+    if (!succ.check<side>()) {
+      if (depth > 1) {
+        auto [cn,cs] = search2<flip<side>>(succ, depth - 1);
+        count += cn;
+        checks += cs;
+      } else
+        ++count;
+    } else
+      ++checks;
+  }
+  return {count, checks};
+}
+
+template <typename side>
+size_t search_legal(const node& node, int depth) noexcept {
+  //  if (depth == 0)
+  //    return 1;
+  size_t count = 0;
+  move moves[256];
+  for (const move& move : node.generate<side>(moves)) {
+    if (depth <= 1)
+      count += 1;
+    else {
+      const struct node succ(node, move, side{});
+      struct move moves2[256];
+      count += depth == 2 ? succ.generate<flip<side>>(moves2).size() : search_legal<flip<side>>(succ, depth - 1);
     }
   }
   return count;
@@ -117,16 +157,28 @@ void print(const node& node, int depth, int height) {
   move moves[256];
   for (const move& move : node.generate<side>(moves)) {
     const struct node succ(node, move, side{});
-    if (!succ.check<side>()) {
+//    if (!succ.check<side>()) {
       std::cout << std::string_view{intend.data(), intend.data() + 2 * height} << move << std::endl;
       print<flip<side>>(succ, depth - 1, height + 1);
-    }
+//    }
   }
 }
 
 size_t position::perft(int depth) const noexcept {
   return std::visit([this, depth] <typename side>(side) noexcept {
     return search<side>(node, depth);
+  }, color);
+}
+
+std::tuple<size_t, size_t> position::perft2(int depth) const noexcept {
+  return std::visit([this, depth] <typename side>(side) noexcept {
+    return search2<side>(node, depth);
+  }, color);
+}
+
+size_t position::perft_legal(int depth) const noexcept {
+  return std::visit([this, depth] <typename side>(side) noexcept {
+    return search_legal<side>(node, depth);
   }, color);
 }
 
