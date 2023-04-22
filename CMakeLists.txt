@@ -9,10 +9,12 @@ project(HelloWorld CXX)
 
  if(MSVC)
 	message(STATUS "compiler=msvc")
-	add_compile_options(/Ox /arch:AVX2 /Gy)
+	add_compile_options(/Ox /arch:AVX2 /Gy /GL)
+	add_link_options(/LTCG)
 else()
 	message(STATUS "compiler=gcc")
 	add_compile_options(-O3 -march=native)
+	add_link_options(-flto)
 endif()
 
 file (GLOB_RECURSE SOURCES CONFIGURE_DEPENDS ./src/*.cpp ./src/*.hpp)

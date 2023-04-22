@@ -4,7 +4,6 @@
 #include "side.hpp"
 #include "square_view.hpp"
 #include <bit>
-#include <bits/ranges_algobase.h>
 #include <ranges>
 
 #include <iostream>
@@ -21,7 +20,7 @@ std::span<move> generate(const node& node, std::span<move, 256> moves) noexcept 
   auto valid_b = 0ull;
 
   uint64_t valid_for_pinned[64];
-  std::ranges::fill(valid_for_pinned, ~0ull);
+  std::ranges::fill_n(valid_for_pinned, 64, ~0ull);
 
   auto valids = ~0ull;
 
